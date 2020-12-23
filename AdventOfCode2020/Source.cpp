@@ -390,8 +390,60 @@ namespace Day5 {
 		std::cout << "Highest seat_id:"<<ProcessInput();
 	}
 }
+namespace Day6 {
+	int CalcAns1() {
+		std::ifstream in("Day6_input.txt");
+		std::string str;
+		std::set<char> set;
+		int sum = 0;
+		while (std::getline(in, str)){
+			if (str == "") {
+				int num = set.size();
+				set.clear();
+				sum += num;
+				std::cout << "plus "<<num<<'\n';
+			}
+			for (char ch : str) {
+				set.insert(ch);
+			}
+		}
+		int num = set.size();
+		sum += num;
+		return sum;
+	}
+	int CalcAns2() {
+		std::ifstream in("Day6_input.txt");
+		std::string str;
+		std::map<char,int> map;
+		int sum = 0;
+		int n = 0;
+		while (std::getline(in, str)) {
+			if (str == "") {
+				for (auto& it : map) {
+					if (it.second == n) sum++;
+				}
+				map.clear();
+				n=0;
+				continue;
+			}
+			for (char ch : str) {
+				map[ch]++;
+			}
+			n++;
+		}
+		for (auto& it : map) {
+			if (it.second == n) sum++;
+		}
+		return sum;
+	}
+	void Solution() {
+		std::cout << "Part 1, sum="<<CalcAns1()<<'\n';
+		std::cout << "Part 2, sum=" << CalcAns2();
+	}
+}
 int main()
 {
-	Day5::Solution();
+	Day6::Solution();
+	std::cin.get();
 	return 0;
 }

@@ -8,6 +8,9 @@
 #include <unordered_map>
 #include <sstream>
 #include <stdlib.h>
+#include <iterator>
+#include <queue>
+#include <stack>
 
 namespace Day1
 {
@@ -441,9 +444,108 @@ namespace Day6 {
 		std::cout << "Part 2, sum=" << CalcAns2();
 	}
 }
+namespace Day7 {
+	template <typename Out>
+	void split(const std::string& s, char delim, Out result) {
+		std::istringstream iss(s);
+		std::string item;
+		while (std::getline(iss, item, delim)) {
+			*result++ = item;
+		}
+	}
+	std::vector<std::string> split(const std::string& s, char delim) {
+		std::vector<std::string> elems;
+		split(s, delim, std::back_inserter(elems));
+		return elems;
+	}
+	std::map<std::string, std::vector<std::pair<std::string,int>>> GetDependencyMap() {
+		std::map<std::string, std::vector<std::pair<std::string, int>>> map;
+		std::ifstream in("Day7_input.txt");
+		std::string str;
+		while (std::getline(in, str)) {
+			auto vec = split(str, ' ');
+			std::string master;
+			std::string runner;
+			for (auto& word : vec) {
+				if (word == "contain") {
+					master = runner.substr(0,runner.size()-2);
+					runner = "";
+				}
+				else if (*word.rbegin() == '.' or *word.rbegin() == ',') {
+					
+					runner += word.substr(0, word.size() - 1);
+					auto i = runner.find_first_of(' ');
+					std::string prefix = runner.substr(0, i);
+					runner = runner.substr(i+1);
+					if (runner.back() == 's') runner.pop_back();
+					if (prefix == "no") {
+						map[master] = {};
+					}
+					else {
+						int n = std::stoi(prefix); // not used for now
+						map[master].push_back({ runner , n});
+					}
+					runner = "";
+				}
+				else {
+					runner += word+" ";
+				}
+			}
+		}
+		return std::move(map);
+	}
+	bool BagHoldsGoldBag(std::string topbag, std::map<std::string, std::vector<std::pair<std::string, int>>>& map) {
+		std::set<std::string> set;
+		std::queue<std::string> queue;
+		for (auto bagpair : map[topbag]) {
+			queue.push(bagpair.first);
+		}
+		while (!queue.empty()) {
+			std::string bag = queue.front(); queue.pop();
+			if (bag == "shiny gold bag") {
+				return true;
+			}
+			if (set.find(bag) == set.end()) {
+				set.insert(bag);
+				for (auto childbagpair : map[bag]) queue.push(childbagpair.first);
+			}
+		}
+		return false;
+	}
+	int nGoldBagCarriers(std::map<std::string, std::vector<std::pair<std::string, int>>>& map) {
+		int n = 0;
+		for (auto it = map.begin(); it != map.end(); ++it) {
+			if (it->second.size() == 0) continue;
+			if (BagHoldsGoldBag(it->first, map)) {
+				n++;
+			}
+		}
+		return n;
+	}
+	int nBagsInside(std::string topbag, std::map<std::string, std::vector<std::pair<std::string, int>>>& map) {
+		//if (map[topbag].size() == 0) return 1;
+		int sum = 0;
+		for (auto bagpair : map[topbag]) {
+			if (map[bagpair.first].size() == 0) {
+				sum += bagpair.second;
+			}
+			else {
+				sum += bagpair.second + bagpair.second * nBagsInside(bagpair.first, map);
+			}
+		}
+		//std::cout << sum<<',';
+		return sum;
+	}
+}
+
+
 int main()
 {
-	Day6::Solution();
-	std::cin.get();
+	auto map=Day7::GetDependencyMap();
+	int n = Day7::nGoldBagCarriers(map);
+	std::cout << "Part 1. Number of bags that can hold a gold bag: " << n<<'\n';
+	int m = Day7::nBagsInside("shiny gold bag", map);
+	std::cout << "Part 2. Number of bags inside the gold bag: " << m;
+	//std::cin.get();
 	return 0;
 }

@@ -1,4 +1,5 @@
 // STL headers
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -14,6 +15,7 @@
 #include <stack>
 // Own headers
 #include "Utils.h"
+#include "Assembler.h"
 
 namespace Day1
 {
@@ -448,7 +450,6 @@ namespace Day6 {
 	}
 }
 namespace Day7 {
-	
 	std::map<std::string, std::vector<std::pair<std::string,int>>> GetDependencyMap() {
 		std::map<std::string, std::vector<std::pair<std::string, int>>> map;
 		std::ifstream in("Day7_input.txt");
@@ -537,24 +538,111 @@ namespace Day7 {
 		std::cin.get();
 	}
 }
-#include "Assembler.h"
 namespace Day8 {
 	void Solution() {
 		Assembler assembler("Day8_input.txt");
-		//auto ans = assembler.run();
-		//std::cout << "Part 1:" << ans.first;
-		//std::cin.get();
-
+		auto ans = assembler.run();
+		std::cout << "Part 1:" << ans.first;
+		std::cin.get();
 		int ans2 = assembler.fix();
 		std::cout << "Part 2:" << ans2;
 		std::cin.get();
 	}
+}
+namespace Day9 {
+	class Solution {
+	public:
+		Solution(std::string filename) {
+			LoadData(filename);
+		}
+		void Solve() {
+			// PART 1
+			int seqLen = 25;
+			std::vector<long long> runnerVec;
+			std::copy(input.begin(), input.begin() + seqLen, std::back_inserter(runnerVec));
+			int i = seqLen;
+			while (i < input.size()) {
+				validSums.clear();
+				GetValidSums(runnerVec, 0, 0, seqLen, 2);
+				if (validSums.find(input[i]) == validSums.end()) {
+					break;
+				}
+				else {
+					runnerVec.erase(runnerVec.begin());
+					runnerVec.push_back(input[i]);
+					i++;
+				}
+			}
+			std::cout << "PART 1: ";
+			if (i == input.size()) {
+				std::cout << "All entries comply. No errors.\n";
+			}
+			else {
+				std::cout << "First number that fails: " << input[i]<<'\n';
+			}
+			// PART 2
+			long long target = input[i];
+			std::pair<int, int> range = GetSumRange(target);
+			auto smallest = std::min_element(input.begin()+range.first, input.begin() + range.second);
+			auto largest = std::max_element(input.begin() + range.first, input.begin() + range.second);
+			std::cout << "PART 2: Answer = " << *smallest + *largest;
+		}
+	private:
+		void LoadData(std::string filename) {
+			std::ifstream in("Day9_input.txt");
+			std::string str;
+			while (std::getline(in, str)) {
+				input.push_back(std::stoll(str));
+			}
+		}
+		void GetValidSums(std::vector<long long> vec, long long sum, int i, int n, int k)
+		{
+			// invalid input
+			if (k > n)
+				return;
 
+			// base case: combination size is k
+			if (k == 0) {
+				//std::cout << sum << std::endl;
+				validSums.insert(sum);
+				return;
+			}
+
+			// start from next index till last index
+			for (int j = i; j < n; j++)
+			{
+				// add current element arr[j] to solution & recur for next index
+				// (j+1) with one less element (k-1)
+				GetValidSums(vec, sum + vec[j], j + 1, n, k - 1);
+
+				// uncomment below code to handle duplicates
+				// while (j < n - 1 && arr[j] == arr[j + 1])
+				//    j++;
+			}
+		}
+		std::pair<int, int> GetSumRange(long long target) {
+			int left = 0; int right = 0;
+			int sum = 0;
+			while (left <= right && right < input.size()) {
+				while (sum < target && right < input.size()) {
+					sum += input[right];
+					right++;
+				}
+				while (sum > target && left <= right) {
+					sum -= input[left];
+					left++;
+				}
+				if (sum == target) return { left,right };
+			}
+			return { -1,-1 };
+		}
+	private:
+		std::vector<long long> input;
+		std::set<long long> validSums;
+	};
 }
 
-
-int main()
-{
-	Day8::Solution();
+int main(){
+	Day9::Solution("Day9_input.txt").Solve();
 	return 0;
 }

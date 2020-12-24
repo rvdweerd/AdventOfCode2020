@@ -1,3 +1,4 @@
+// STL headers
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -11,6 +12,8 @@
 #include <iterator>
 #include <queue>
 #include <stack>
+// Own headers
+#include "Utils.h"
 
 namespace Day1
 {
@@ -445,25 +448,13 @@ namespace Day6 {
 	}
 }
 namespace Day7 {
-	template <typename Out>
-	void split(const std::string& s, char delim, Out result) {
-		std::istringstream iss(s);
-		std::string item;
-		while (std::getline(iss, item, delim)) {
-			*result++ = item;
-		}
-	}
-	std::vector<std::string> split(const std::string& s, char delim) {
-		std::vector<std::string> elems;
-		split(s, delim, std::back_inserter(elems));
-		return elems;
-	}
+	
 	std::map<std::string, std::vector<std::pair<std::string,int>>> GetDependencyMap() {
 		std::map<std::string, std::vector<std::pair<std::string, int>>> map;
 		std::ifstream in("Day7_input.txt");
 		std::string str;
 		while (std::getline(in, str)) {
-			auto vec = split(str, ' ');
+			auto vec = Utils::split(str, ' ');
 			std::string master;
 			std::string runner;
 			for (auto& word : vec) {
@@ -536,16 +527,34 @@ namespace Day7 {
 		//std::cout << sum<<',';
 		return sum;
 	}
+	void Solution()
+	{
+		auto map=GetDependencyMap();
+		int n = nGoldBagCarriers(map);
+		std::cout << "Part 1. Number of bags that can hold a gold bag: " << n<<'\n';
+		int m = nBagsInside("shiny gold bag", map);
+		std::cout << "Part 2. Number of bags inside the gold bag: " << m;
+		std::cin.get();
+	}
+}
+#include "Assembler.h"
+namespace Day8 {
+	void Solution() {
+		Assembler assembler("Day8_input.txt");
+		//auto ans = assembler.run();
+		//std::cout << "Part 1:" << ans.first;
+		//std::cin.get();
+
+		int ans2 = assembler.fix();
+		std::cout << "Part 2:" << ans2;
+		std::cin.get();
+	}
+
 }
 
 
 int main()
 {
-	auto map=Day7::GetDependencyMap();
-	int n = Day7::nGoldBagCarriers(map);
-	std::cout << "Part 1. Number of bags that can hold a gold bag: " << n<<'\n';
-	int m = Day7::nBagsInside("shiny gold bag", map);
-	std::cout << "Part 2. Number of bags inside the gold bag: " << m;
-	//std::cin.get();
+	Day8::Solution();
 	return 0;
 }

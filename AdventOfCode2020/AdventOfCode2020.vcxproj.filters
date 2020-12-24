@@ -27,5 +27,14 @@
     <Text Include="Day5_input.txt" />
     <Text Include="Day6_input.txt" />
     <Text Include="Day7_input.txt" />
+    <Text Include="Day8_input.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Assembler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

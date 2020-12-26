@@ -714,7 +714,165 @@ namespace Day10 {
 		std::unordered_map<int, long long> cache;
 	};
 }
+namespace Day11 {
+	struct Field {
+		std::vector<std::vector<std::vector<char>>> copies;
+		int occupied = 0;
+		//bool side = 1;
+	};
+	class Solution {
+	public:
+		Solution(std::string filename) {
+			LoadData(filename);
+		}
+		void LoadData(std::string filename) {
+			std::ifstream in(filename);
+			std::string str;
+			while (std::getline(in, str)) {
+				std::vector<char> line;
+				for (char c : str) {
+					line.push_back(c);
+					if (c == '#') field.occupied++;
+				}
+				field_original.push_back(line);
+			}
+			field.copies.push_back(field_original);
+			field.copies.push_back(field_original);
+			height = field_original.size();
+			width = field_original[0].size();
+		}
+		void Print(int side) {
+			for (auto vec : field.copies[side]) {
+				for (auto p : vec) {
+					std::cout << p;
+				}
+				std::cout << '\n';
+			}
+		}
+		int OccupiedNeighbors(int y, int x, bool side) {
+			int xmin = std::max(0, x - 1);
+			int xmax = std::min(width-1, x + 1);
+			int ymin = std::max(0, y - 1);
+			int ymax = std::min(height-1, y + 1);
+			int count = 0;
+			for (int row = ymin; row <= ymax; row++) {
+				for (int col = xmin; col <= xmax; col++) {
+					if (row == y && col == x) continue;
+					if (field.copies[side][row][col] == '#') {
+						count++;
+					}
+				}
+			}
+			return count;
+		}
+		char Look(int y, int x,int yDir, int xDir) {
+			y += yDir; x += xDir;
+			while (y >= 0 && y < height && x >= 0 && x < width) {
+				if (field.copies[1][y][x] != '.') return field.copies[1][y][x];
+				y += yDir; x += xDir;
+			}
+			return '.';
+		}
+		int OccupiedVisibleNeighbors(int y, int x, bool side) {
+			int count = 0;
+			count += Look(y, x, 1, 0) == '#';
+			count += Look(y, x, -1, 0) == '#';
+			count += Look(y, x, 0, 1) == '#';
+			count += Look(y, x, 0, -1) == '#';
+			count += Look(y, x, 1, 1) == '#';
+			count += Look(y, x, 1, -1) == '#';
+			count += Look(y, x, -1, 1) == '#';
+			count += Look(y, x, -1, -1) == '#';
+			return count;
+		}
+		int Step() {
+			// field 1 fixed for evaluation, field 0 gets new seating assigned
+			int flips = 0;
+			for (int row = 0; row < height; row++) {
+				for (int col = 0; col < width; col++) {
+					char current = field.copies[1][row][col];
+					if (current == '.') continue;
+					int occupiedNeighbors = OccupiedNeighbors(row, col, 1);
+					if (current == 'L' && occupiedNeighbors == 0) {
+						field.copies[0][row][col] = '#';
+						field.occupied++;
+						flips++;
+					}
+					else if (current == '#' && occupiedNeighbors >= 4) {
+						field.copies[0][row][col] = 'L';
+						field.occupied--;
+						flips++;
+					}
+				}
+			}
+			field.copies[1].assign(field.copies[0].begin(), field.copies[0].end());
+			std::cout << "Flips:" << flips << ", Occupied: "<<field.occupied<<'\n';
+			return flips;
+		}
+		int Step2() {
+			// field 1 fixed for evaluation, field 0 gets new seating assigned
+			int flips = 0;
+			for (int row = 0; row < height; row++) {
+				for (int col = 0; col < width; col++) {
+					char current = field.copies[1][row][col];
+					if (current == '.') continue;
+					int occupiedNeighbors = OccupiedVisibleNeighbors(row, col, 1);
+					if (current == 'L' && occupiedNeighbors == 0) {
+						field.copies[0][row][col] = '#';
+						field.occupied++;
+						flips++;
+					}
+					else if (current == '#' && occupiedNeighbors >= 5) {
+						field.copies[0][row][col] = 'L';
+						field.occupied--;
+						flips++;
+					}
+				}
+			}
+			field.copies[1].assign(field.copies[0].begin(), field.copies[0].end());
+			std::cout << "Flips:" << flips << ", Occupied: " << field.occupied << '\n';
+			return flips;
+		}
+
+		void Solve() {
+			// PART 1
+			int nSteps = 0;
+			while (Step()) {
+				nSteps++;
+				std::cout << "STEP " << nSteps<<'\n';
+				system("CLS");
+				//Print(1);
+				//std::cin.get();
+			}
+			Print(1);
+			std::cout << "Part 1.\nStability after " << nSteps << " steps. Seats occupied in equilibrium: " << field.occupied<<'\n';
+			std::cin.get();
+			// PART 2
+			field.copies.clear();
+			field_original.clear();
+			field.occupied = 0;
+			LoadData("Day11_input.txt");
+			Print(1);
+			nSteps = 0;
+			while (Step2()) {
+				nSteps++;
+				std::cout << "STEP " << nSteps << '\n';
+				system("CLS");
+				//Print(1);
+				//std::cin.get();
+			}
+			Print(1);
+			std::cout << "Part 2.\nStability after " << nSteps << " steps. Seats occupied in equilibrium: " << field.occupied << '\n';
+			std::cin.get();
+		}
+	private:
+		std::vector<std::vector<char>> field_original;
+		Field field;
+		int width;
+		int height;
+	};
+}
 int main(){
-	Day10::Solution("Day10_input.txt").Solve();
+	Day11::Solution("Day11_input.txt").Solve();
 	return 0;
 }

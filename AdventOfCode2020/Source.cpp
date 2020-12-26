@@ -641,8 +641,80 @@ namespace Day9 {
 		std::set<long long> validSums;
 	};
 }
+namespace Day10 {
+	class Solution {
+	public:
+		Solution(std::string filename) {
+			LoadData(filename);
+		}
+		void LoadData(std::string filename) {
+			std::ifstream in(filename);
+			std::string str;
+			while (std::getline(in, str)) {
+				input.push_back(std::stoi(str));
+			}
+			std::sort(input.begin(), input.end());
+		}
+		void Solve() {
+			// PART 1
+			std::map<int, int> distribution;
+			distribution[input[0]] = 1;
+			distribution[3] = 1;
+			for (size_t i = 1; i < input.size(); i++) {
+				int diff = input[i] - input[i - 1];
+				distribution[diff]++;
+			}
+			int ans = distribution[1] * distribution[3];
+			std::cout << "Part 1: Ans = " << ans << '\n';
 
+			// PART 2 (DP, will use recursion with memoization here)
+			this->input.insert(input.begin(), 0);
+			long long nRoutes = RecurseRoutes(0);
+			std::cout<<"Part 2 (recursion): Number of routes = "<<nRoutes<<'\n';
+			
+			// PART 2 (DP Table)
+			std::vector<long long> DP(input.size(), 0); DP.back() = 1;
+			for (int i = input.size() - 2; i >= 0; i--) {
+				auto options = GetOptions(i);
+				for (auto o : options) {
+					DP[i] += DP[o];
+				}
+			}
+			std::cout << "Part 2 (DP table) : Number of routes = " << DP[0];
+		}
+		long long RecurseRoutes(int index) {
+			auto it = cache.find(index);
+			if (it != cache.end()) {
+				return it->second;
+			}
+			std::vector<int> options = GetOptions(index);
+			if (options.size() == 0) {
+				//std::cout << '\n';
+				return 1;
+			}
+			long long sum = 0;
+			for (int v : options) {
+				//std::cout << input[v] << ',';
+				sum += RecurseRoutes(v);
+			}
+			cache[index] = sum;
+			return sum;
+		}
+		std::vector<int> GetOptions(int index) {
+			std::vector<int> out;
+			for (size_t runner = index + 1; runner <= index + 3 && runner < input.size(); runner++) {
+				if (input[runner] - input[index] <= 3) {
+					out.push_back(runner);
+				}
+			}
+			return out;
+		}
+	private:
+		std::vector<int> input;
+		std::unordered_map<int, long long> cache;
+	};
+}
 int main(){
-	Day9::Solution("Day9_input.txt").Solve();
+	Day10::Solution("Day10_input.txt").Solve();
 	return 0;
 }

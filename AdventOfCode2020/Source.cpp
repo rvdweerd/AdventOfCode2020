@@ -1013,7 +1013,94 @@ namespace Day12{
 		Pos WP{ 10,1 };
 	};
 }
+namespace Day13 {
+	class Solution {
+	public:
+		Solution(std::string filename) {
+			LoadData(filename);
+		}
+		void LoadData(std::string filename) {
+			std::ifstream in(filename);
+			std::string str;
+			std::getline(in, str);
+			eTS = std::stoi(str);
+			std::getline(in, str);
+			std::vector<std::string> tokens = Utils::split(str, ',');
+			int offset = 0;
+			for (auto t : tokens) {
+				if (t != "x") {
+					int v = std::stoi(t);
+					busLines.push_back(v);
+					busLines_offsets.push_back({ v,offset });
+					N *= v;
+				}
+				offset++;
+			}
+		}
+		void Solve() {
+			// PART 1
+			int busIdx = 0;
+			int minWait = 2e9;
+			for (int i = 0; i < busLines.size();i++) {
+				int wait = - eTS % busLines[i] + busLines[i];
+				if (wait < minWait) {
+					minWait = wait;
+					busIdx = i;
+				}
+			}
+			std::cout << "Part 1:\nans = " << minWait*busLines[busIdx]<<'\n';
+
+			// PART 2
+			long long t = 0;
+			//N /= busLines[0];
+			for (int i = 0; i < busLines_offsets.size(); i++) {
+				int offset = busLines_offsets[i].second;
+				int n_i = busLines_offsets[i].first;
+				int b_i = -offset;
+				do {
+					b_i += n_i;
+				} while (b_i < 0);
+				b_i = b_i % n_i;
+				if (b_i == 0) continue;
+				long long N_i = N / n_i;
+				long long x_i = Utils::modInverse_Fermat(N_i, n_i);
+				long long t_i = ((b_i * N_i) * x_i) % N;
+				t += t_i;
+				//std::cout << "t_i:" << t_i<<"\n--------------\n";
+				//std::cout << "t  :" << t << '\n';
+			}
+			t = t % N;
+			std::cout << "Part 2:\nans = " << t << '\n';
+		}
+	private:
+		int eTS;
+		std::vector<int> busLines;
+		std::vector<std::pair<int,int>> busLines_offsets;
+		long long N=1; // product of modulars
+	};
+}
+namespace Day14 {
+	class Solution {
+	public:
+		Solution(std::string filename) {
+			LoadData(filename);
+		}
+		void LoadData(std::string filename) {
+			std::ifstream in(filename);
+			std::string str;
+			std::getline(in, str);
+			
+		}
+		void Solve() {
+			
+			std::cout << '\n';
+		}
+	private:
+		
+	};
+}
+
 int main(){
-	Day12::Solution("Day12_input.txt").Solve();
+	Day13::Solution("Day13_input.txt").Solve();
 	return 0;
 }

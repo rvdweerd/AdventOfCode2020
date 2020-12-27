@@ -17,4 +17,35 @@ namespace Utils {
 		split(s, delim, std::back_inserter(elems));
 		return elems;
 	}
+	long long gcd(long long a, long long b)
+	{
+		if (a == 0)
+			return b;
+		return gcd(b % a, a);
+	}
+	// To compute x^y under modulo m 
+	long long power(long long x, unsigned long long y, unsigned long long m)
+	{
+		if (y == 0)
+			return 1;
+		int p = power(x, y / 2, m) % m;
+		p = (p * p) % m;
+
+		return (y % 2 == 0) ? p : (x * p) % m;
+	}
+	// Function to find modular inverse of a under modulo m 
+	// Assumption: m is prime 
+	long long modInverse_Fermat(long long a, long long m){
+		int g = gcd(a, m);
+		if (g != 1)
+			std::cout << "Inverse doesn't exist";
+		else
+		{
+			// If a and m are relatively prime, then modulo 
+			// inverse is a^(m-2) mode m 
+			//cout << "Modular multiplicative inverse is "
+			//	<< power(a, m - 2, m);
+			return power(a, m - 2, m);
+		}
+	}
 }

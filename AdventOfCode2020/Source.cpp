@@ -872,7 +872,148 @@ namespace Day11 {
 		int height;
 	};
 }
+namespace Day12{
+	class DIR {
+		enum bDIR {
+			N,E,S,W
+		};
+	public:
+		bDIR d = E;
+		void increment(int n) {
+			d = bDIR((d + n) % 4);
+			if (d < 0) {
+				d = bDIR(d+4);
+			}
+		}
+		char Char() {
+			switch (d) {
+			case 0: return 'N';
+			case 1: return 'E';
+			case 2: return 'S';
+			case 3: return 'W';
+			}
+		}
+	};
+	class Solution {
+	public:
+		Solution(std::string filename) {
+			LoadData(filename);
+		}
+		void LoadData(std::string filename) {
+			std::ifstream in(filename);
+			std::string str;
+			while (std::getline(in, str)) {
+				instructions.push_back({ str[0],std::stoi(str.substr(1)) });
+			}
+		}
+		void Move(std::pair<char,int> i) {
+			switch (i.first) {
+			case 'N': 
+				pos.y += i.second;
+				break;
+			case 'S': 
+				pos.y -= i.second;
+				break;
+			case 'E': 
+				pos.x += i.second;
+				break;
+			case 'W': 
+				pos.x -= i.second;
+				break;
+			case 'L': 
+				dir.increment(-i.second/90);
+				break;
+			case 'R':
+				dir.increment(i.second/90);
+				break;
+			case 'F': 
+				Move({ dir.Char(),i.second });
+			default: 
+				break;
+			}
+		}
+		void MoveUsingWP(std::pair<char, int> i) {
+			switch (i.first) {
+			case 'N':
+				WP.y += i.second;
+				break;
+			case 'S':
+				WP.y -= i.second;
+				break;
+			case 'E':
+				WP.x += i.second;
+				break;
+			case 'W':
+				WP.x -= i.second;
+				break;
+			case 'L':
+				WP.Rotate(-i.second);
+				break;
+			case 'R':
+				WP.Rotate(i.second);
+				break;
+			case 'F':
+				pos.x = pos.x + WP.x * i.second;
+				pos.y = pos.y + WP.y * i.second;
+			default:
+				break;
+			}
+		}
+		void Solve() {
+			// PART 1
+			std::cout << "Part 1:\n";
+			for (auto instr : instructions) {
+				Move(instr);
+				//std::cout << "Instruction: " << instr.first << instr.second<<", new position: ("<<pos.x<<','<<pos.y<<"), Direction: "<<dir.Char()<<"\n";
+				//std::cin.get();
+			}
+			std::cout << "End position: (" << pos.x << ',' << pos.y << "), Manhattan distance from origin: "<<(std::abs(pos.x)+std::abs(pos.y))<<'\n';
+
+			// PART 2
+			std::cout << "Part 2:\n";
+			pos = { 0,0 };
+			for (auto instr : instructions) {
+				MoveUsingWP(instr);
+				//std::cout << "Instruction: " << instr.first << instr.second<<", new position: ("<<pos.x<<','<<pos.y<<"), WP: (" << WP.x << ',' << WP.y << ")"<<"\n";
+				//td::cin.get();
+			}
+			std::cout << "End position: (" << pos.x << ',' << pos.y << "), Manhattan distance from origin: " << (std::abs(pos.x) + std::abs(pos.y)) << '\n';
+
+		}
+	private:
+		struct Pos {
+			int x=0;
+			int y=0;
+			void Rotate(int degrees) {
+				degrees = degrees % 360;
+				if (degrees < 0) degrees += 360;
+				int x_tmp = x;
+				switch (degrees) {
+				case 90:
+					x = y;
+					y = -x_tmp;
+					break;
+				case 180:
+					x = -x;
+					y = -y;
+					break;
+				case 270:
+					x = -y;
+					y = x_tmp;
+					break;
+				default:
+					break;
+				}
+			}
+		};
+		std::vector<std::pair<char, int>> instructions;
+		//DIR dir = DIR::E;
+		Pos pos;
+		DIR dir;
+		Pos WP{ 10,1 };
+	};
+}
 int main(){
-	Day11::Solution("Day11_input.txt").Solve();
+	Day12::Solution("Day12_input.txt").Solve();
 	return 0;
 }

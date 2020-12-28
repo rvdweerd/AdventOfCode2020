@@ -48,4 +48,14 @@ namespace Utils {
 			return power(a, m - 2, m);
 		}
 	}
+	std::string ToBin(unsigned long long n, int min_digits = 0)
+	{
+		std::string bin_str;
+		for (int count = 0; n != 0 || count < min_digits; n >>= 1, count++)
+		{
+			bin_str.push_back(bool(n & 0b1) ? '1' : '0');
+		}
+		std::reverse(bin_str.begin(), bin_str.end());
+		return bin_str;
+	}
 }

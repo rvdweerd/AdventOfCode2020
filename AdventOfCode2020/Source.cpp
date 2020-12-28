@@ -1080,6 +1080,132 @@ namespace Day13 {
 	};
 }
 namespace Day14 {
+	struct Instruction
+	{
+		int address;
+		long long value;
+	};
+	struct InstructionBlock {
+		std::string mask_str;
+		unsigned long long mask=0;
+		unsigned long long mash=0-1;
+		std::vector<Instruction> instructions;
+	};
+	struct FilterBank {
+		FilterBank() {
+			unsigned long long base = 1;
+			unsigned long long maskZeros = 0;
+			unsigned long long mashOnes = 0 - 1;
+			for (size_t i = 0; i < 36; i++) {
+				unimask[i]= maskZeros | (base << i);
+				unimash[i]= mashOnes ^ (base << i);
+			}
+			//for (auto v : unimask) {
+			//	std::cout << Utils::ToBin(v.second,64) << '\n';
+			//}
+			//for (auto v : unimash) {
+			//	std::cout << Utils::ToBin(v.second, 64) << '\n';
+			//}
+		}
+		std::map<int, unsigned long long> unimask;
+		std::map<int, unsigned long long> unimash;
+	};
+	class Solution {
+	public:
+		Solution(std::string filename) {
+			LoadData(filename);
+		}
+		void Solve() {
+			// PART 1.
+			{
+				long long sum = 0;
+				for (const auto& m : memory) {
+					sum += m.second;
+				}
+				std::cout << "Part 1.\nSum = " << sum << '\n';
+			}
+			// PART 2.
+			memory.clear();
+			for (const auto& block : instructionBlocks) {
+				for (const auto& instr : block.instructions) {
+					unsigned long long address = block.mask | (instr.address);// &block.mash);
+					//std::cout << "org adr : " << Utils::ToBin(instr.address, 64) << '\n';
+					//std::cout << "mask_str: " << std::string(64 - 36, '.') << block.mask_str << '\n';
+					//std::cout << "mask    : " << Utils::ToBin(block.mask, 64) << '\n';
+					//std::cout << "mash    : " << Utils::ToBin(block.mash, 64) << '\n';
+					//std::cout << "new adr : " << Utils::ToBin(address, 64) << " ("<<address<<")"<< '\n';
+					std::vector<unsigned long long> addressVariations = {address};
+					for (size_t i = 0; i < block.mask_str.size(); i++) {
+						if (block.mask_str[block.mask_str.size() - i-1] == 'X') { // process starting from least significant bit on the right
+							int K = addressVariations.size();
+							for (size_t k = 0; k < K; k++) {
+								addressVariations.push_back(addressVariations[k] ^ filterBank.unimask[i]);
+								//std::cout << "variant : "<<Utils::ToBin(addressVariations.back(),64) << " ("<<addressVariations.back() <<")"<<'\n';
+							} //std::cout << '\n';
+						}
+					}
+					// Apply instructions for this set of address variations
+					for (auto adr : addressVariations) { 
+						memory[adr] = instr.value;
+					}
+				}
+			}
+			long long sum = 0;
+			for (const auto& m : memory) {
+				sum += m.second;
+			}
+			std::cout << "Part 2.\nSum = " << sum << '\n';
+		}
+	private:
+		void LoadData(std::string filename) {
+			unsigned long long mask = 0;
+			unsigned long long mash = 0 - 1; // all 1 binary
+			std::ifstream in(filename);
+			std::string str;
+			InstructionBlock block;
+			while (std::getline(in, str)) {
+				if (str.substr(0, 3) == "mas")
+				{
+					mask = 0;
+					mash = 0 - 1; // all 1 binary
+					std::string mask_str = str.substr(7);
+					if (block.instructions.size() != 0) {
+						instructionBlocks.push_back(block);
+					}
+					for (size_t i = 0; i < mask_str.size(); i++) {
+						if (mask_str[i] == '1') {
+							mask = mask | (base << (34 - i +1 ));
+							//std::cout << Utils::ToBin(mask, 64) << '\n';
+						}
+						else if (mask_str[i] == '0') {
+							mash = mash ^ (base << (34 - i + 1));
+							//std::cout << Utils::ToBin(mash,64)<<'\n';
+						}
+					}
+					block.mask_str = mask_str;
+					block.mask = mask;
+					block.mash = mash;
+					block.instructions.clear();
+				}
+				else {
+					str = str.substr(4);
+					size_t i = str.find(']');
+					int address = std::stoi(str.substr(0, i));
+					long long val = std::stoll(str.substr(i + 4));
+					block.instructions.push_back(Instruction({ address,val }));
+					memory[address] = ( mask | ( val & mash ));
+				}
+			}
+			instructionBlocks.push_back(block);			
+		}
+	private:
+		FilterBank filterBank;
+		long long base = 1;
+		std::unordered_map<long long, long long> memory;
+		std::vector<InstructionBlock> instructionBlocks;
+	};
+}
+namespace Day15 {
 	class Solution {
 	public:
 		Solution(std::string filename) {
@@ -1089,18 +1215,17 @@ namespace Day14 {
 			std::ifstream in(filename);
 			std::string str;
 			std::getline(in, str);
-			
+
 		}
 		void Solve() {
-			
+
 			std::cout << '\n';
 		}
 	private:
-		
+
 	};
 }
-
 int main(){
-	Day13::Solution("Day13_input.txt").Solve();
+	Day14::Solution("Day14_input.txt").Solve();
 	return 0;
 }

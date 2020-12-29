@@ -1207,6 +1207,53 @@ namespace Day14 {
 }
 namespace Day15 {
 	class Solution {
+		struct Mem2 {
+			void Insert(int n) {
+				penult = ult;
+				ult = n;
+				diff = ult - penult;
+			}
+			int ult=-1;
+			int penult=-1;
+			int diff = 0;
+		};
+	public:
+		Solution(std::string filename) {
+			LoadData(filename);
+		}
+		void LoadData(std::string filename) {
+			//std::ifstream in(filename);
+			//std::string str;
+			//std::getline(in, str);
+			for (std::size_t i = 0; i < sequence.size(); i++) {
+				map[sequence[i]].Insert(i);
+			}
+		}
+		void Solve() {
+			int T = 30000000; // end number
+			sequence.reserve(T);
+			for (size_t i = sequence.size()-1; i < T-1; i++) {
+				auto it = map.find(sequence[i]);
+				if (it->second.penult == -1) { // only spoken once
+					sequence.push_back(0);
+					map[0].Insert(i+1);
+				}
+				else{
+					sequence.push_back(it->second.diff);
+					map[it->second.diff].Insert(i+1);
+				}
+			}
+			std::cout << T<<"th number spoken = "<<sequence.back()<<'\n';
+			//for (int v : sequence) std::cout << v << ',';
+		}
+	private:
+		std::unordered_map<int, Mem2> map;
+		//std::vector<int> sequence = { 0,3,6 };
+		std::vector<int> sequence = { 11,18,0,20,1,7,16 };
+	};
+}
+namespace Day16 {
+	class Solution {
 	public:
 		Solution(std::string filename) {
 			LoadData(filename);
@@ -1226,6 +1273,6 @@ namespace Day15 {
 	};
 }
 int main(){
-	Day14::Solution("Day14_input.txt").Solve();
+	Day15::Solution("Day15_input.txt").Solve();
 	return 0;
 }

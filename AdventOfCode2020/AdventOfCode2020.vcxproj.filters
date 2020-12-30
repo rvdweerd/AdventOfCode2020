@@ -34,6 +34,7 @@
     <Text Include="Day12_input.txt" />
     <Text Include="Day13_input.txt" />
     <Text Include="Day14_input.txt" />
+    <Text Include="Day16_input.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Assembler.h">

@@ -1222,9 +1222,6 @@ namespace Day15 {
 			LoadData(filename);
 		}
 		void LoadData(std::string filename) {
-			//std::ifstream in(filename);
-			//std::string str;
-			//std::getline(in, str);
 			for (std::size_t i = 0; i < sequence.size(); i++) {
 				map[sequence[i]].Insert(i);
 			}
@@ -1244,15 +1241,189 @@ namespace Day15 {
 				}
 			}
 			std::cout << T<<"th number spoken = "<<sequence.back()<<'\n';
-			//for (int v : sequence) std::cout << v << ',';
 		}
 	private:
 		std::unordered_map<int, Mem2> map;
-		//std::vector<int> sequence = { 0,3,6 };
 		std::vector<int> sequence = { 11,18,0,20,1,7,16 };
 	};
 }
 namespace Day16 {
+	struct Entry {
+		Entry(int p)
+			:
+			pos(p)
+		{}
+		int pos;
+		std::map<std::string, int> count;
+		std::set<std::string> candidateFields;
+	};
+	class Solution {
+	public:
+		Solution(std::string filename) {
+			LoadData(filename);
+			BuildDataStructs();
+		}
+		void LoadData(std::string filename) {
+			int fileSeg = 0; // switch to different loading routinges for different parts of the input file
+			std::ifstream in(filename);
+			std::string str;
+			while (std::getline(in, str)) {
+				if (str == "your ticket:") {
+					fileSeg = 1; continue;
+				}
+				if (str == "nearby tickets:") {
+					fileSeg = 2; continue;
+				}
+				if (str == "") {
+					continue;
+				}
+				switch (fileSeg) {
+				case 0:
+				{	
+					size_t i = str.find(":");
+					std::string field = str.substr(0, i);
+					str = str.substr(i + 2);
+					auto tokens = Utils::split(str, ' ');
+					auto range1_vec = Utils::split(tokens[0], '-');
+					auto range2_vec = Utils::split(tokens[2], '-');
+					fieldRanges[field] = { std::stoi(range1_vec[0]),std::stoi(range1_vec[1]),std::stoi(range2_vec[0]),std::stoi(range2_vec[1]) };
+					for (auto& v : fieldRanges[field]) {
+						if (v > fieldRange_max_value) fieldRange_max_value = v;
+					}
+				}
+					break;
+				case 1:
+				{
+					const auto tokens = Utils::split(str,',');
+					for (const auto& t : tokens) {
+						myTicket.push_back(std::stoi(t));
+					}
+				}
+					break;
+				case 2:
+				{
+					const auto tokens = Utils::split(str, ',');
+					std::vector<int> vec;
+					for (const auto& t : tokens) {
+						vec.push_back(std::stoi(t));
+					}
+					nearbyTickets.push_back(vec);
+				}
+					break;
+				}
+			}
+
+		}
+		void BuildDataStructs() {
+			// Build the nearbyTicketsMatrix & valueToFieldsMap
+			nearbyTicketsMatrix.resize(fieldRanges.size(),std::vector<bool>(fieldRange_max_value+1));
+			size_t entry = 0;
+			for (auto& mapEntry : fieldRanges) {
+				for (size_t i = mapEntry.second[0]; i <= mapEntry.second[1]; i++) {
+					nearbyTicketsMatrix[entry][i] = 1;
+					valueToFieldsMap[i].push_back(mapEntry.first);
+				}
+				for (size_t i = mapEntry.second[2]; i <= mapEntry.second[3]; i++) {
+					nearbyTicketsMatrix[entry][i] = 1;
+					valueToFieldsMap[i].push_back(mapEntry.first);
+				}
+				entry++;
+			}
+		}
+		void Solve() {
+			// PART 1
+			{
+				int errorRate = 0;
+				for (auto& ticket : nearbyTickets) {
+					bool valid = true;
+					for (int v : ticket) {
+						if (valueToFieldsMap.find(v) == valueToFieldsMap.end()) {
+							errorRate += v;
+							valid = false;
+						}
+					}
+					if (valid) {
+						validNearbyTickets.push_back(ticket);
+					}
+				}
+				std::cout << "Part 1.\nerrorRate = " << errorRate << '\n';
+			}
+			// PART 2
+			{
+				std::cout << "\nPart 2.\n";
+				// Create vector of entry objects for each entry on a ticket, that contains all candidate information fields for that entry
+				// (based on checking all valid tickets)
+				auto allValidTickets = validNearbyTickets;
+				allValidTickets.push_back(myTicket);
+				for (int e = 0; e < fieldRanges.size(); e++) {
+					Entry* entry = new Entry(e);
+					for (std::vector<int>& ticketVec : allValidTickets) {
+						std::vector<std::string> candidates = valueToFieldsMap[ticketVec[e]];
+						for (std::string c : candidates) {
+							entry->count[c]++;
+						}
+					}
+					for (auto e : entry->count) {
+						if (e.second == allValidTickets.size()) // this field appears on all tickets for this entry and is a valid candidate
+						{
+							entry->candidateFields.insert(e.first);
+						}
+					}
+					entries.push_back(entry);
+				}
+				// Deduce fields of ticket entries by inference 
+				std::vector<Entry*> decided;
+				std::queue<Entry*> undecided;
+				for (Entry* entry : entries) {
+					if (entry->candidateFields.size() == 1) {
+						decided.push_back(entry);
+					}
+					else {
+						undecided.push(entry);
+					}
+				}
+				while (!undecided.empty()) {
+					Entry* entry = undecided.front(); undecided.pop();
+					for (Entry* decidedEntry : decided) {
+						entry->candidateFields.erase(*decidedEntry->candidateFields.begin());
+						if (entry->candidateFields.size() == 1) break;
+					}
+					if (entry->candidateFields.size() == 1) {
+						decided.push_back(entry);
+					}
+					else {
+						undecided.push(entry);
+					}
+				}
+				// Retrieve entry positions that contain "departure"
+				std::map<std::string, int> myTicketDecoded;
+				for (size_t i = 0; i < entries.size(); i++) {
+					myTicketDecoded[*entries[i]->candidateFields.begin()] = myTicket[i];
+					std::cout << "   >" << *entries[i]->candidateFields.begin() << ": " << myTicket[i] << '\n';
+				}
+				long long mult = 1;
+				for (auto e : myTicketDecoded) {
+					if (e.first.substr(0, 9) == "departure") {
+						mult *= long long(e.second);
+					}
+				}
+				std::cout << "\nDeparture related entries multiplied: " << mult;
+			}
+		}
+	private:
+		// Datastructs for holding input data
+		std::map<std::string, std::vector<int>> fieldRanges;
+		std::vector<int> myTicket;
+		std::vector<std::vector<int>> nearbyTickets;
+		std::vector<std::vector<int>> validNearbyTickets;
+		int fieldRange_max_value = 0;
+		// Datastructs for solving 
+		std::vector<std::vector<bool>> nearbyTicketsMatrix;
+		std::map<int, std::vector<std::string>> valueToFieldsMap;
+		std::vector<Entry*> entries;
+	};
+}
+namespace Day17 {
 	class Solution {
 	public:
 		Solution(std::string filename) {
@@ -1272,7 +1443,8 @@ namespace Day16 {
 
 	};
 }
+
 int main(){
-	Day15::Solution("Day15_input.txt").Solve();
+	Day16::Solution("Day16_input.txt").Solve();
 	return 0;
 }

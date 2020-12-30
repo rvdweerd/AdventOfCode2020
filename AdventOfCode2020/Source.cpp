@@ -1424,6 +1424,147 @@ namespace Day16 {
 	};
 }
 namespace Day17 {
+	constexpr const int STEPS = 6;
+	class Solution {
+	public:
+		Solution(std::string filename) {
+			LoadData(filename);
+			BuildWorld();
+		}
+		void Print(int z=0) {
+			for (int i = -x0; i <= x0; i++) {
+				for (int j = -y0; j <= y0; j++) {
+					if (cube[x0 + i][y0 + j][z0+z-1]) std::cout << '#';
+					else std::cout << '.';
+				}
+				std::cout << "     ";
+				for (int j = -y0; j <= y0; j++) {
+					if (cube[x0 + i][y0 + j][z0 + z]) std::cout << '#';
+					else std::cout << '.';
+				}
+				std::cout << "     ";
+				for (int j = -y0; j <= y0; j++) {
+					if (cube[x0 + i][y0 + j][z0 + z+1]) std::cout << '#';
+					else std::cout << '.';
+				}
+				std::cout << '\n';
+			}
+			std::cout << '\n';
+			std::cout << "x_min=" << xMin << ", x_max=" << xMax << '\n';
+			std::cout << "y_min=" << yMin << ", y_max=" << yMax << '\n';
+			std::cout << "z_min=" << zMin << ", z_max=" << zMax << '\n';
+			std::cout << "nActive=" << nActive << '\n';
+
+		}
+		void LoadData(std::string filename) {
+			std::ifstream in(filename);
+			std::string str;
+			while (getline(in, str)) {
+				std::vector<bool> vec1;
+				for (char c : str) {
+					if (c == '.') vec1.push_back(false);
+					else if (c == '#') vec1.push_back(true);
+				}
+				if (str.size() % 2 == 0) vec1.push_back(0);
+				startingField.push_back(vec1);
+			}
+			if (str.size() % 2 == 0) startingField.push_back(std::vector<bool>(str.size() + 1));
+			w0 = startingField[0].size();
+			h0 = startingField.size();
+			x0 = w0 / 2 + STEPS; W = 2 * x0 + 1;
+			y0 = h0 / 2 + STEPS; H = 2 * y0 + 1;
+			z0 = STEPS; D = 2 * z0 + 1;
+			cube.resize(W, std::vector<std::vector<bool>>(H, std::vector<bool>(D)));
+		}
+		void BuildWorld() {
+			for (int x = -w0/2; x <= w0/2; x++) {
+				for (int y = -h0/2; y <= h0/2; y++) {
+					if (startingField[w0 / 2 + x][h0 / 2 + y] == true)
+					{
+						cube[x0 + x][y0 + y][z0] = true;
+						nActive++;
+						if (x - 1 < xMin) xMin = x - 1;
+						if (x + 1 > xMax) xMax = x + 1;
+						if (y - 1 < yMin) yMin = y - 1;
+						if (y + 1 > yMax) yMax = y + 1;
+					}
+				}
+			}
+			//for (int i = -STEPS; i < STEPS; i++)
+			std::cout << "Starting layer at z=-1,0,1\n";
+			Print(); 
+			std::cin.get();
+		}
+		int countActiveNeighbors(int x_query, int y_query, int z_query) {
+			int count = 0;
+			for (int x = std::max(x_query-1, xMin); x <= std::min(x_query+1, xMax); x++) {
+				for (int y = std::max(y_query - 1, yMin); y <= std::min(y_query + 1, yMax); y++) {
+					for (int z = std::max(z_query - 1, zMin); z <= std::min(z_query + 1, zMax); z++) {
+						if (x == x_query && y == y_query && z == z_query) continue;
+						if (cube[x+x0][y+y0][z+z0] == true) {
+							count++;
+						}
+					}
+				}
+			}
+			return count;
+		}
+		int ProcessStep() {
+			int nFlips = 0;
+			std::vector<std::vector<std::vector<bool>>> cube_new = cube;
+			for (int x = xMin; x <= xMax; x++) {
+				for (int y = yMin; y <= yMax; y++) {
+					for (int z = zMin; z <= zMax; z++) {
+						int n = countActiveNeighbors(x, y, z);
+						if ( (cube[x + x0][y + y0][z + z0]) && (n!=2 && n!=3) ) {
+							cube_new[x + x0][y + y0][z + z0] = false;
+							nFlips++;
+							nActive--;
+						}
+						else if ( (!cube[x + x0][y + y0][z + z0]) && (n == 3) ) {
+							cube_new[x + x0][y + y0][z + z0] = true;
+							if (x - 1 < xMin) xMin = x-1;
+							if (x + 1 > xMax) xMax = x+1;
+							if (y - 1 < yMin) yMin = y-1;
+							if (y + 1 > yMax) yMax = y+1;
+							if (z - 1 < zMin) zMin = z-1;
+							if (z + 1 > zMax) zMax = z+1;
+							nFlips++;
+							nActive++;
+						}
+					}
+				}
+			}
+			cube = cube_new;
+			return nFlips;
+		}
+		void Solve() {			
+			for (int step = 0; step < STEPS-1; step++) {
+				system("CLS");
+				std::cout << "Step " << step + 1 << ", flips: " << ProcessStep() << '\n';
+				Print(0);
+				std::cin.get();
+			}
+			std::cout << '\n';
+		}
+	private:
+		std::vector<std::vector<bool>> startingField;
+		std::vector<std::vector<std::vector<bool>>> cube;
+		int w0; // starting field width
+		int h0; // starting field height
+		int W; int x0; // max envelope: W = max field width, x0 = max abs(x-coordinate), also x-index of origin
+		int H; int y0; // same for y
+		int D; int z0; // same for z
+		int xMin =-1; // current envelope
+		int xMax = 1;
+		int yMin =-1;
+		int yMax = 1;
+		int zMin =-1;
+		int zMax = 1;
+		int nActive = 0;
+	};
+}
+namespace Day18 {
 	class Solution {
 	public:
 		Solution(std::string filename) {
@@ -1443,8 +1584,7 @@ namespace Day17 {
 
 	};
 }
-
 int main(){
-	Day16::Solution("Day16_input.txt").Solve();
+	Day17::Solution("Day17_input.txt").Solve();
 	return 0;
 }

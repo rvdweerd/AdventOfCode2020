@@ -1423,7 +1423,131 @@ namespace Day16 {
 		std::vector<Entry*> entries;
 	};
 }
-namespace Day17 {
+namespace Day17_clean {
+	std::string Hash(const std::vector<int>& vec) {
+		std::string str = "(";
+		for (int v : vec) {
+			str += std::to_string(v) + ',';
+		}
+		str.pop_back(); str += ')';
+		return str;
+	}
+	class Solution {
+	public:
+		Solution(std::string filename_)
+			:
+			filename(filename_)
+		{}
+		void Solve() {
+			std::cout << "Part 1.\n";
+			ProcessSteps(6, 3); 
+			std::cout << "\nPart 2.\n";
+			ProcessSteps(6, 4);
+		}
+	private:
+		void ProcessSteps(const int STEPS=6, const int NDIMS=3) {
+			LoadData(NDIMS);
+			std::cout << "Starting field actives: " << actives.size() << ". Dimension of vector space: " << NDIMS << '\n';
+			for (size_t step = 0; step < STEPS; step++) {
+				std::unordered_set<std::string> visited;
+				std::vector<std::string> retire;
+				std::vector<std::string> activate;
+				for (const auto& c: actives) {
+					for (const auto& cc : coordCube[c]) {
+						if (visited.find(cc) != visited.end()) {
+							continue; // skip if already checked
+						}
+						int n = CountActiveNeighbors(cc);
+						if (actives.find(cc) == actives.end()) { // inactive cell
+							if (n == 3) activate.push_back(cc);
+						}
+						else { // active cell
+							if (n != 2 && n != 3) retire.push_back(cc);
+						}
+						visited.insert(cc);
+					}
+				}
+				for (const auto& c : activate) actives.insert(c);
+				for (const auto& c : retire) actives.erase(c);
+			std::cout << "Step " << step + 1 << " completed. Actives left: " << actives.size() << '\n';
+			}
+		}
+		void LoadData(int NDIMS) {
+			actives.clear(); coord.clear(); coordCube.clear(); startingField.clear();
+			int x = 0;
+			int y = 0;
+			std::vector<int> remainingZeroVector = std::vector<int>(std::max(0,NDIMS - 2));
+			std::ifstream in(filename);
+			std::string str;
+			while (getline(in, str)) {
+				std::vector<bool> vec1;
+				for (char ch : str) {
+					if (ch == '.') vec1.push_back(false);
+					else if (ch == '#') {
+						// Fill base data vector
+						vec1.push_back(true);
+						// Fill coordinate containers
+						std::vector<int> c = { x,y };
+						c.insert(c.end(), remainingZeroVector.begin(), remainingZeroVector.end());
+						std::string c_str = Hash(c);
+						coord[c_str] = c;
+						actives.insert(c_str);
+						// Fill neighbor coordinates map
+						coordCube[c_str] = GetNeighboringCoords(c);
+					}
+					x += 1;
+				}
+				startingField.push_back(vec1);
+				y += 1;
+				x = 0;
+			}
+		}
+		int CountActiveNeighbors(const std::string& c_str) {
+			int count = 0;
+			if (coordCube.find(c_str) == coordCube.end()) {
+				coordCube[c_str] = GetNeighboringCoords(coord[c_str]);
+			}
+			for (auto n_str : coordCube[c_str]) {
+				if (n_str == c_str) continue; // exclude own position when counting active neighbors
+				else {
+					if (actives.find(n_str) != actives.end()) {
+						count++;
+					}
+				}
+			}
+			return count;
+		}
+		void Recurse(size_t i, std::vector<int> c, std::vector<std::string>& vecHash) {//, const std::string& home) {
+			if (i == c.size()) {
+				std::string c_str = Hash(c);
+				//if (c_str == home) return; 
+				coord[c_str] = c;
+				vecHash.push_back(c_str);
+			}
+			else
+			{
+				for (int k = -1; k <= 1; k++) {
+					c[i] += k;
+					Recurse(i + 1, c, vecHash);//, home);
+					c[i] -= k;
+				}
+			}
+			return;
+		}
+		std::vector<std::string> GetNeighboringCoords(std::vector<int> c) {
+			std::vector<std::string> vecH;
+			Recurse(0, c, vecH);
+			return vecH;
+		}
+	private:
+		std::string filename;
+		std::unordered_set<std::string> actives;
+		std::unordered_map<std::string,std::vector<int>> coord;
+		std::unordered_map<std::string, std::vector<std::string>> coordCube; // coord with all its cubic neighbors (+1/0/-1 coord in all dimensions)
+		std::vector<std::vector<bool>> startingField;
+	};
+}
+namespace Day17a_visualized {
 	constexpr const int STEPS = 6;
 	class Solution {
 	public:
@@ -1564,6 +1688,7 @@ namespace Day17 {
 		int nActive = 0;
 	};
 }
+
 namespace Day18 {
 	class Solution {
 	public:
@@ -1584,7 +1709,8 @@ namespace Day18 {
 
 	};
 }
+
 int main(){
-	Day17::Solution("Day17_input.txt").Solve();
+	Day17_clean::Solution("Day17_input.txt").Solve();
 	return 0;
 }

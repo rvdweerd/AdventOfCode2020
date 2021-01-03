@@ -18,30 +18,37 @@
     <ClCompile Include="Source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Expressions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Day1_input.txt" />
-    <Text Include="Day2_input.txt" />
-    <Text Include="Day3_input.txt" />
-    <Text Include="Day4_input.txt" />
-    <Text Include="Day5_input.txt" />
-    <Text Include="Day6_input.txt" />
-    <Text Include="Day7_input.txt" />
-    <Text Include="Day8_input.txt" />
-    <Text Include="Day9_input.txt" />
-    <Text Include="Day10_input.txt" />
-    <Text Include="Day11_input.txt" />
-    <Text Include="Day12_input.txt" />
-    <Text Include="Day13_input.txt" />
-    <Text Include="Day14_input.txt" />
-    <Text Include="Day16_input.txt" />
-    <Text Include="Day17_input.txt" />
+    <Text Include="Input_files\Day1_input.txt" />
+    <Text Include="Input_files\Day2_input.txt" />
+    <Text Include="Input_files\Day3_input.txt" />
+    <Text Include="Input_files\Day4_input.txt" />
+    <Text Include="Input_files\Day6_input.txt" />
+    <Text Include="Input_files\Day7_input.txt" />
+    <Text Include="Input_files\Day8_input.txt" />
+    <Text Include="Input_files\Day9_input.txt" />
+    <Text Include="Input_files\Day10_input.txt" />
+    <Text Include="Input_files\Day11_input.txt" />
+    <Text Include="Input_files\Day12_input.txt" />
+    <Text Include="Input_files\Day13_input.txt" />
+    <Text Include="Input_files\Day14_input.txt" />
+    <Text Include="Input_files\Day16_input.txt" />
+    <Text Include="Input_files\Day17_input.txt" />
+    <Text Include="Input_files\Day5_input.txt" />
+    <Text Include="Input_files\Day18_input.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Assembler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Expressions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

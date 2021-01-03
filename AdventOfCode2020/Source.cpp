@@ -16,6 +16,7 @@
 // Own headers
 #include "Utils.h"
 #include "Assembler.h"
+#include "Expressions.h"
 
 namespace Day1
 {
@@ -1691,6 +1692,122 @@ namespace Day17a_visualized {
 
 namespace Day18 {
 	class Solution {
+		std::string filename;
+	public:
+		Solution(std::string filename) 
+			:
+			filename(filename)
+		{
+			LoadData();
+		}
+		void LoadData() {
+			tokenVecContainer.clear();
+			tokenStackContainer.clear();
+			std::ifstream in(filename);
+			std::string str;
+			while (getline(in, str)) {
+				std::vector<std::string> tvec = Utils::split(str, ' ');
+				std::vector<std::string> tokens;
+				std::stack<std::string> stack;
+				for (size_t t = 0; t < tvec.size(); t++) {
+					int begin = 0;
+					int end = tvec[t].size();
+					for (char ch : tvec[t]) {
+						if (ch == '(') {
+							tokens.push_back("(");
+							begin++;
+						}
+						if (ch == ')') {
+							end--;
+						}
+					}
+					tokens.push_back(tvec[t].substr(begin, end-begin));
+					for (int i = 0; i < tvec[t].size() - end; i++) {
+						tokens.push_back(")");
+					}
+				}
+				for (auto it = tokens.rbegin(); it != tokens.rend(); ++it) {
+					stack.push(*it);
+				}
+				tokenVecContainer.push_back(tokens);
+				tokenStackContainer.push_back(stack);
+			}
+			
+		}
+		enum class Operation {
+			ADD,MULTIPLY
+		};
+		long long evaluate1(std::stack<std::string>& tokenStack) {
+			long long accum = 0;
+			Operation op = Operation::ADD;
+			while (!tokenStack.empty()) {
+				std::string token = tokenStack.top(); tokenStack.pop();
+				if (token == "(") {
+					if (op == Operation::ADD) accum += evaluate1(tokenStack);
+					else accum *= evaluate1(tokenStack);
+				}
+				if (token == ")") return accum;
+				if (token == "*") op = Operation::MULTIPLY;
+				else if (token == "+") op = Operation::ADD;
+				else if (isdigit(token[0])) {
+					if (op == Operation::ADD) accum += std::stoi(token);
+					else accum *= std::stoi(token);
+				}
+			}
+			return accum;
+		}
+		long long evaluate2(std::stack<std::string>& tokenStack) {
+			long long mult = 1;
+			long long accum = 0;
+			Operation op = Operation::ADD;
+			while (!tokenStack.empty()) {
+				std::string token = tokenStack.top(); tokenStack.pop();
+				if (token == "(") {
+					accum += evaluate2(tokenStack) * mult;
+				}
+				if (token == ")") return accum;
+				if (token == "*") {//op = Operation::MULTIPLY;
+					mult = accum;
+					accum = 0;
+				}
+				//else if (token == "+") op = Operation::ADD;
+				else if (isdigit(token[0])) {
+					//if (op == Operation::ADD) accum += std::stoi(token);
+					//else accum *= std::stoi(token);
+					accum += mult * std::stoi(token);
+				}
+			}
+			return accum;
+		}
+		long long Evaluate1() {
+			long long Accum = 0;
+			for (auto tokenStack : tokenStackContainer) {
+				Accum += evaluate1(tokenStack);
+			}
+			return Accum;
+		}
+		long long Evaluate2() {
+			long long Accum = 0;
+			for (auto tokenStack : tokenStackContainer) {
+				Accum += evaluate2(tokenStack);
+			}
+			return Accum;
+		}
+		void Solve() {
+			long long ans1 = Evaluate1();
+			LoadData();
+			long long ans2 = Evaluate2();
+			std::cout << '\n';
+		}
+	private:
+		std::vector<std::vector<std::string>> tokenVecContainer;
+		std::vector<std::stack<std::string>> tokenStackContainer;
+
+	};
+}
+
+namespace DayYY {
+	class Solution {
 	public:
 		Solution(std::string filename) {
 			LoadData(filename);
@@ -1711,6 +1828,6 @@ namespace Day18 {
 }
 
 int main(){
-	Day17_clean::Solution("Day17_input.txt").Solve();
+	Day18::Solution("Input_files/Day18_input.txt").Solve();
 	return 0;
 }
